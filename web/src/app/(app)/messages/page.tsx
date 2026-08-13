@@ -1,16 +1,18 @@
 "use client";
 import { PageHeader, RowLink, Stat } from "@/components/ui";
 import { useApi, LoadingGrid } from "@/components/data";
-export default function MsgHome() {
-  const { data, loading } = useApi<{campaigns:any[]}>("/api/campaigns");
+export default function Page() {
+  const { data, loading } = useApi<{ campaigns: any[] }>("/api/campaigns");
   if (loading) return <LoadingGrid />;
-  const dms = (data?.campaigns||[]).filter((c:any)=>c.kind==="dm");
+  const dms = (data?.campaigns || []).filter((c) => c.kind === "dm");
   return (
     <div>
       <PageHeader title="الرسائل الجماعية" subtitle="حملات DM عبر أسطول الحسابات" />
       <div className="mb-4 grid grid-cols-2 gap-3">
         <Stat icon="💬" label="حملات" value={dms.length} />
-        <Stat icon="⚡" label="نشطة" value={dms.filter((c:any)=>c.status==="running").length} tone="info" />
+        <Stat icon="⚡" label="نشطة" value={dms.filter((c) => c.status === "running").length} tone="info" />
+        <Stat icon="✅" label="أُرسل" value={dms.reduce((s, c) => s + c.sentCount, 0)} tone="success" />
+        <Stat icon="❌" label="فشل" value={dms.reduce((s, c) => s + c.failCount, 0)} tone="danger" />
       </div>
       <div className="space-y-2">
         <RowLink href="/messages/new" icon="➕" title="إنشاء حملة" />

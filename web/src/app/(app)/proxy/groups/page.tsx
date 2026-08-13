@@ -1,21 +1,22 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Card, Empty } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+export default function Page() {
+  const { data, loading } = useApi<{ groups: any[] }>("/api/proxies");
+  if (loading) return <LoadingGrid />;
+  const groups = data?.groups || [];
   return (
     <div>
-      <PageHeader title="مجموعات البروكسي" back="/proxy" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Field label="اسم مجموعة جديدة" hint=""><Input placeholder="اسم مجموعة جديدة" /></Field>
-        <Banner tone="info">استخدم المجموعات للتعيين الجماعي</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم إنشاء المجموعة");},600);}}>{busy?"جاري...":"إنشاء"}</Button>
-      </Card>
+      <PageHeader title="مجموعات البروكسيهات" back="/proxy" />
+      <div className="space-y-2">
+        {groups.map((g) => (
+          <Card key={g.id}>
+            <div className="font-bold">{g.name}</div>
+            <div className="text-sm text-ink-muted">{g.description} · {g.proxies?.length || 0} بروكسي</div>
+          </Card>
+        ))}
+        {groups.length === 0 && <Empty title="لا مجموعات" />}
+      </div>
     </div>
   );
 }

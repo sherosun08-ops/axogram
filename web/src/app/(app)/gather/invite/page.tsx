@@ -1,22 +1,35 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { PageHeader, Card, Field, Input, Button, Banner } from "@/components/ui";
+import { AccountSelect, Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const router = useRouter();
+  const op = useOp();
+  const [link, setLink] = useState("");
+  const [info, setInfo] = useState<any>(null);
+  const [leave, setLeave] = useState(true);
+  const [accountId, setAccountId] = useState("");
   return (
     <div>
       <PageHeader title="تجميع من رابط دعوة خاص" back="/gather" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} />
       <Card className="space-y-3">
-        <Field label="رابط الدعوة" hint="t.me/+xxxxx"><Input placeholder="رابط الدعوة" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> الانضمام تلقائياً قبل التجميع</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> المغادرة بعد الانتهاء</label>
-        <Banner tone="info">القروبات الخاصة قد تخفي قائمة الأعضاء — يُستخدم سجل الرسائل كبديل</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم تحليل الرابط — جاهز للتجميع");},600);}}>{busy?"جاري...":"تحليل الرابط"}</Button>
+        <Field label="رابط الدعوة" hint="t.me/+xxxxx"><Input value={link} onChange={(e) => setLink(e.target.value)} /></Field>
+        <Button disabled={!link || op.busy} onClick={async () => setInfo((await op.run("analyze_group", { link }) as any).group)}>تحليل الرابط</Button>
+        {info && (
+          <>
+            <div className="rounded-xl bg-slate-50 p-3 text-sm">{info.title} · {info.members} عضو · {info.type}</div>
+            <Banner tone="info">سينضم الحساب ثم يجمع ثم يغادر اختيارياً</Banner>
+            <label className="flex gap-2 text-sm"><input type="checkbox" checked={leave} onChange={(e) => setLeave(e.target.checked)} /> المغادرة بعد الانتهاء</label>
+            <AccountSelect value={accountId} onChange={setAccountId} />
+            <Button className="w-full" disabled={op.busy} onClick={async () => {
+              const r: any = await op.run("start_gather", { link, leave, accountId, source: info.title, limit: Math.min(info.members, 2000) });
+              router.push(`/reports/live/${r.job.id}`);
+            }}>بدء التجميع</Button>
+          </>
+        )}
       </Card>
     </div>
   );

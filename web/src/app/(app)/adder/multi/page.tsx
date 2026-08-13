@@ -1,20 +1,25 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { PageHeader, Card, Field, Input, Textarea, Button } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const router = useRouter();
+  const op = useOp();
+  const [raw, setRaw] = useState("");
+  const [target, setTarget] = useState("");
   return (
     <div>
       <PageHeader title="متعدد المصادر" back="/adder" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} />
       <Card className="space-y-3">
-        <Field label="ملفات أو روابط مصادر"><Textarea placeholder="ملفات أو روابط مصادر" /></Field>
-        <Field label="القروب الهدف" hint=""><Input placeholder="القروب الهدف" /></Field>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("بدأت العملية");},600);}}>{busy?"جاري...":"بدء"}</Button>
+        <Field label="ملفات أو روابط مصادر — سطر لكل مصدر"><Textarea value={raw} onChange={(e) => setRaw(e.target.value)} /></Field>
+        <Field label="القروب الهدف"><Input value={target} onChange={(e) => setTarget(e.target.value)} /></Field>
+        <Button className="w-full" disabled={!raw || !target || op.busy} onClick={async () => {
+          const r: any = await op.run("start_add", { target, raw, total: 500, title: "إضافة متعددة المصادر" });
+          router.push(`/reports/live/${r.job.id}`);
+        }}>بدء</Button>
       </Card>
     </div>
   );

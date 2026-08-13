@@ -1,20 +1,19 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { useApi } from "@/components/data";
+import { LogList } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("أسبوع");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data } = useApi<any>("/api/reports");
+  const banned = (data?.accounts || []).filter((a: any) => ["banned", "frozen", "restricted_temp", "restricted_perm"].includes(a.status));
   return (
     <div>
       <PageHeader title="تقارير الأمان" back="/security" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <div className="font-semibold">الفترة</div><Radio name="r" value="أسبوع" checked={val==="أسبوع"} onChange={setVal} label="أسبوع" /><Radio name="r" value="شهر" checked={val==="شهر"} onChange={setVal} label="شهر" /><Radio name="r" value="مخصص" checked={val==="مخصص"} onChange={setVal} label="مخصص" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم إنشاء التقرير");},600);}}>{busy?"جاري...":"إنشاء التقرير"}</Button>
+      <Card className="mb-4">
+        <div className="font-bold">حسابات تحتاج مراجعة: {banned.length}</div>
+        {banned.map((a: any) => <div key={a.id} className="text-sm">{a.firstName} — {a.status}</div>)}
       </Card>
+      <LogList type="security" />
     </div>
   );
 }

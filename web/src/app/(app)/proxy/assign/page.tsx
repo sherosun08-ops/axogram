@@ -1,20 +1,23 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button, Radio, Banner } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("يدوي");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [mode, setMode] = useState("smart");
   return (
     <div>
-      <PageHeader title="تعيين البروكسيهات" back="/proxy" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <PageHeader title="تعيين البروكسيهات للحسابات" back="/proxy" />
+      <Feedback err={op.err} msg={op.msg} />
       <Card className="space-y-3">
-        <div className="font-semibold">الطريقة</div><Radio name="r" value="يدوي" checked={val==="يدوي"} onChange={setVal} label="يدوي" /><Radio name="r" value="تلقائي ذكي" checked={val==="تلقائي ذكي"} onChange={setVal} label="تلقائي ذكي" /><Radio name="r" value="تدوير دوري" checked={val==="تدوير دوري"} onChange={setVal} label="تدوير دوري" />
-        <Banner tone="info">التعيين الذكي يوزّع حسب الدولة والكمون</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم التعيين");},600);}}>{busy?"جاري...":"تطبيق"}</Button>
+        <Radio name="m" value="smart" checked={mode === "smart"} onChange={setMode} label="تلقائي ذكي" hint="يوزّع الحيّ على الحسابات النشطة" />
+        <Radio name="m" value="rotate" checked={mode === "rotate"} onChange={setMode} label="تدوير دوري" />
+        <Banner tone="info">التعيين الذكي يوزّع حسب التوفر والكمون</Banner>
+        <Button className="w-full" disabled={op.busy} onClick={async () => {
+          const r: any = await op.run("assign_proxies", { mode });
+          op.setMsg(`تم تعيين ${r.assigned} حساباً`);
+        }}>تطبيق التعيين</Button>
       </Card>
     </div>
   );

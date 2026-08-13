@@ -1,21 +1,20 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Card, Field, Input, Button } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
+export default function Page() {
+  const op = useOp();
+  const [title, setTitle] = useState("");
+  const [at, setAt] = useState("21:00");
   return (
     <div>
       <PageHeader title="جدولة الحملات" back="/campaigns" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} msg={op.msg} />
       <Card className="space-y-3">
-        <Field label="التاريخ" hint=""><Input placeholder="التاريخ" /></Field>
-        <Field label="الوقت" hint="21:00"><Input placeholder="الوقت" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> تكرار أسبوعي</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تمت الجدولة");},600);}}>{busy?"جاري...":"جدولة"}</Button>
+        <Field label="عنوان الجدول"><Input value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
+        <Field label="الوقت"><Input value={at} onChange={(e) => setAt(e.target.value)} /></Field>
+        <label className="flex gap-2 text-sm"><input type="checkbox" /> تكرار أسبوعي</label>
+        <Button disabled={!title} onClick={async () => { await op.run("create_schedule", { kind: "campaign", title, at, repeat: "weekly" }); op.setMsg("تمت الجدولة"); }}>جدولة</Button>
       </Card>
     </div>
   );

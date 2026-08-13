@@ -1,20 +1,21 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Card, Button, Empty } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+import { api } from "@/lib/api-client";
+export default function Page() {
+  const { data, loading, reload } = useApi<{ campaigns: any[] }>("/api/campaigns");
+  if (loading) return <LoadingGrid />;
+  const items = (data?.campaigns || []).filter((c) => c.kind === "groups" && ["paused", "draft"].includes(c.status));
   return (
     <div>
       <PageHeader title="استئناف حملات القروبات" back="/campaigns" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">الحملات المتوقفة تُستأنف من آخر قروب</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم الاستئناف");},600);}}>{busy?"جاري...":"استئناف"}</Button>
-      </Card>
+      {items.map((c) => (
+        <Card key={c.id} className="mb-2 flex justify-between">
+          <div><div className="font-bold">{c.name}</div><div className="text-sm">{c.sentCount}/{c.targetsCount}</div></div>
+          <Button onClick={async () => { await api(`/api/campaigns/${c.id}`, { method: "PATCH", body: JSON.stringify({ status: "running" }) }); reload(); }}>استئناف</Button>
+        </Card>
+      ))}
+      {items.length === 0 && <Empty title="لا حملات متوقفة" />}
     </div>
   );
 }

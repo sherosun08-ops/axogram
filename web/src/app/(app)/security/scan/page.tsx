@@ -1,19 +1,26 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { PageHeader, Card, Button, Radio } from "@/components/ui";
+import { AccountSelect, Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("كل الحسابات");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const router = useRouter();
+  const op = useOp();
+  const [scope, setScope] = useState("all");
+  const [accountId, setAccountId] = useState("");
   return (
     <div>
       <PageHeader title="فحص أمان شامل" back="/security" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} />
       <Card className="space-y-3">
-        <div className="font-semibold">النطاق</div><Radio name="r" value="كل الحسابات" checked={val==="كل الحسابات"} onChange={setVal} label="كل الحسابات" /><Radio name="r" value="حساب محدد" checked={val==="حساب محدد"} onChange={setVal} label="حساب محدد" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("بدأ الفحص الشامل");},600);}}>{busy?"جاري...":"بدء الفحص"}</Button>
+        <Radio name="s" value="all" checked={scope === "all"} onChange={setScope} label="كل الحسابات" />
+        <Radio name="s" value="one" checked={scope === "one"} onChange={setScope} label="حساب محدد" />
+        {scope === "one" && <AccountSelect value={accountId} onChange={setAccountId} />}
+        <Button className="w-full" disabled={op.busy} onClick={async () => {
+          const r: any = await op.run("security_scan", { scope, accountId });
+          router.push(`/reports/live/${r.job.id}`);
+        }}>بدء الفحص</Button>
       </Card>
     </div>
   );

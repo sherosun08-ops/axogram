@@ -1,22 +1,39 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Input, Button, Empty, Select } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+import { api } from "@/lib/api-client";
+import { DangerConfirm } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data, loading, reload } = useApi<{ items: any[] }>("/api/blacklist");
+  const [value, setValue] = useState("");
+  const [kind, setKind] = useState("user");
+  const [reason, setReason] = useState("");
+  const [wipe, setWipe] = useState(false);
+  if (loading) return <LoadingGrid />;
   return (
     <div>
       <PageHeader title="القائمة السوداء العالمية" back="/security" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Field label="قيمة" hint="@user"><Input placeholder="قيمة" /></Field>
-        <div className="font-semibold">النوع</div><Radio name="r" value="مستخدم" checked={val==="مستخدم"} onChange={setVal} label="مستخدم" /><Radio name="r" value="قروب" checked={val==="قروب"} onChange={setVal} label="قروب" /><Radio name="r" value="كلمة" checked={val==="كلمة"} onChange={setVal} label="كلمة" />
-        <Field label="السبب" hint=""><Input placeholder="السبب" /></Field>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تمت الإضافة");},600);}}>{busy?"جاري...":"إضافة"}</Button>
-      </Card>
+      <div className="mb-3 grid gap-2 md:grid-cols-4">
+        <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder="قيمة" />
+        <Select value={kind} onChange={(e) => setKind(e.target.value)}><option value="user">مستخدم</option><option value="group">قروب</option><option value="word">كلمة</option></Select>
+        <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="السبب" />
+        <Button onClick={async () => { await api("/api/blacklist", { method: "POST", body: JSON.stringify({ value, kind, reason, scope: "global" }) }); setValue(""); reload(); }}>إضافة</Button>
+      </div>
+      <div className="space-y-2">
+        {(data?.items || []).map((i) => (
+          <Card key={i.id} className="flex justify-between">
+            <div><div className="font-bold">{i.value}</div><div className="text-xs text-ink-muted">{i.kind} · {i.reason} · {i.scope}</div></div>
+            <Button variant="ghost" onClick={async () => { await api("/api/blacklist", { method: "DELETE", body: JSON.stringify({ id: i.id }) }); reload(); }}>حذف</Button>
+          </Card>
+        ))}
+        {(data?.items || []).length === 0 && <Empty title="فارغة" />}
+      </div>
+      <Button variant="danger" className="mt-4 w-full" onClick={() => setWipe(true)}>مسح القائمة الكاملة</Button>
+      <DangerConfirm open={wipe} title="مسح القائمة الكاملة؟" word="مسح" onClose={() => setWipe(false)} onOk={async () => { await api("/api/blacklist", { method: "DELETE", body: JSON.stringify({ all: true }) }); setWipe(false); reload(); }}>
+        لا يمكن التراجع.
+      </DangerConfirm>
     </div>
   );
 }

@@ -1,20 +1,25 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button, Banner } from "@/components/ui";
+import { useApi } from "@/components/data";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data } = useApi<{ proxies: any[] }>("/api/proxies");
+  const op = useOp();
+  const dead = (data?.proxies || []).filter((p) => p.status === "dead" && p.accounts?.length);
   return (
     <div>
       <PageHeader title="استبدال الميتة" back="/proxy" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">يستبدل كل بروكسي ميت ومعيَّن بآخر حي من نفس المجموعة إن أمكن</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم الاستبدال");},600);}}>{busy?"جاري...":"استبدال"}</Button>
+      <Feedback err={op.err} msg={op.msg} />
+      <Banner tone="info">يستبدل كل بروكسي ميت ومعيَّن بآخر حي</Banner>
+      <Card className="mb-3">
+        <div className="font-bold">{dead.length} بروكسي ميت ومعيَّن</div>
+        {dead.map((p) => <div key={p.id} className="text-sm">{p.host}:{p.port} · {p.accounts.length} حساب</div>)}
       </Card>
+      <Button className="w-full" disabled={op.busy} onClick={async () => {
+        const r: any = await op.run("replace_dead", {});
+        op.setMsg(`تم استبدال ${r.replaced} تعيين`);
+      }}>استبدال الآن</Button>
     </div>
   );
 }

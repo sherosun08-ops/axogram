@@ -1,21 +1,29 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button, Banner } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("محافظ");
-  const [busy,setBusy]=useState(false);
+const PRESETS = [
+  { id: "conservative", t: "محافظ", h: "تأخيرات طويلة وحدود منخفضة" },
+  { id: "balanced", t: "متوازن ⭐", h: "التوازن الافتراضي" },
+  { id: "aggressive", t: "عدواني", h: "سرعة عالية — مخاطر مرتفعة" },
+  { id: "night", t: "ليلي", h: "دوام 22:00–06:00" },
+];
+
+export default function Page() {
+  const op = useOp();
   return (
     <div>
       <PageHeader title="سيناريوهات جاهزة" back="/rotation" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <div className="font-semibold">سيناريو</div><Radio name="r" value="محافظ" checked={val==="محافظ"} onChange={setVal} label="محافظ" /><Radio name="r" value="متوازن ⭐" checked={val==="متوازن ⭐"} onChange={setVal} label="متوازن ⭐" /><Radio name="r" value="عدواني" checked={val==="عدواني"} onChange={setVal} label="عدواني" /><Radio name="r" value="ليلي" checked={val==="ليلي"} onChange={setVal} label="ليلي" />
-        <Banner tone="warning">التطبيق يستبدل إعدادات التدوير الحالية</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم تطبيق السيناريو");},600);}}>{busy?"جاري...":"تطبيق"}</Button>
-      </Card>
+      <Feedback err={op.err} msg={op.msg} />
+      <Banner tone="warning">التطبيق يستبدل إعدادات التدوير الحالية</Banner>
+      <div className="space-y-2">
+        {PRESETS.map((p) => (
+          <Card key={p.id} className="flex items-center justify-between">
+            <div><div className="font-bold">{p.t}</div><div className="text-sm text-ink-muted">{p.h}</div></div>
+            <Button onClick={async () => { await op.run("apply_preset", { id: p.id }); op.setMsg("تم تطبيق «" + p.t + "»"); }}>تطبيق</Button>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

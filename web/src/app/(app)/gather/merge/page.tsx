@@ -1,22 +1,30 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { useApi } from "@/components/data";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data } = useApi<{ files: any[] }>("/api/files");
+  const op = useOp();
+  const [ids, setIds] = useState<string[]>([]);
+  function tog(id: string) { setIds((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]); }
   return (
     <div>
       <PageHeader title="دمج ملفات" back="/gather" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">اختر ملفين أو أكثر للدمج مع إزالة التكرار</Banner>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> إزالة التكرار بالمعرّف</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> الاحتفاظ بأحدث بيانات العضو</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم إنشاء ملف الدمج");},600);}}>{busy?"جاري...":"دمج"}</Button>
-      </Card>
+      <Feedback err={op.err} msg={op.msg} />
+      <div className="space-y-2 mb-3">
+        {(data?.files || []).map((f) => (
+          <label key={f.id} className="card flex gap-3 p-3 text-sm">
+            <input type="checkbox" checked={ids.includes(f.id)} onChange={() => tog(f.id)} />
+            <span>{f.name} · {f.membersCount}</span>
+          </label>
+        ))}
+      </div>
+      <Button className="w-full" disabled={ids.length < 2 || op.busy} onClick={async () => {
+        const r: any = await op.run("merge_files", { ids });
+        op.setMsg(`تم إنشاء ${r.file.name} — ${r.merged} بعد إزالة التكرار من ${r.raw}`);
+      }}>دمج</Button>
     </div>
   );
 }

@@ -1,22 +1,15 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader } from "@/components/ui";
+import { SettingsForm } from "@/components/prod";
+export default function Page() {
   return (
     <div>
       <PageHeader title="جدولة دوام الدورة" back="/rotation" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Field label="من" hint="09:00"><Input placeholder="من" /></Field>
-        <Field label="إلى" hint="23:00"><Input placeholder="إلى" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> إيقاف خارج الدوام</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم حفظ الجدول");},600);}}>{busy?"جاري...":"حفظ"}</Button>
-      </Card>
+      <SettingsForm back="/rotation" title="rs" success="تم حفظ الجدول" keys={[
+        { key: "work_from", label: "من" },
+        { key: "work_to", label: "إلى" },
+        { key: "work_stop", label: "إيقاف خارج الدوام", type: "toggle" },
+      ]} />
     </div>
   );
 }

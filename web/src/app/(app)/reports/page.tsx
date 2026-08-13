@@ -9,10 +9,10 @@ export default function ReportsHome() {
     <div>
       <PageHeader title="التقارير والسجلات" />
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <Stat icon="⚡" label="عمليات جارية" value={s.running||0} tone="info" />
-        <Stat icon="✅" label="نجاح اليوم" value={s.todaySuccess||0} tone="success" />
-        <Stat icon="📥" label="تجميع تراكمي" value={s.gather||0} />
-        <Stat icon="📤" label="إضافة تراكمية" value={s.add||0} />
+        <Stat icon="⚡" label="عمليات جارية" value={s.running || 0} tone="info" />
+        <Stat icon="✅" label="نجاح اليوم" value={s.todaySuccess || 0} tone="success" />
+        <Stat icon="📥" label="تجميع تراكمي" value={s.gather || 0} />
+        <Stat icon="📤" label="إضافة تراكمية" value={s.add || 0} />
       </div>
       <div className="space-y-2">
         <RowLink href="/reports/live" icon="⚡" title="مركز العمليات الحية" />
@@ -28,6 +28,8 @@ export default function ReportsHome() {
         <RowLink href="/reports/leaderboard" icon="🏆" title="لوحة الترتيب" />
         <RowLink href="/reports/export" icon="📤" title="تصدير التقارير والجدولة" />
         <RowLink href="/reports/manage" icon="🗂️" title="إدارة السجلات" />
+        <RowLink href="/reports/search" icon="🔎" title="بحث موحّد" />
+        <RowLink href="/reports/compare" icon="⚖️" title="مقارنة فترتين" />
       </div>
     </div>
   );

@@ -1,21 +1,26 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Segment, Button, Empty } from "@/components/ui";
+import { useApi } from "@/components/data";
+import { formatDateTime } from "@/lib/utils";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data } = useApi<any>("/api/settings");
+  const [tab, setTab] = useState("all");
+  const items = (data?.attempts || []).filter((a: any) => tab === "all" || (tab === "ok" ? a.success : !a.success));
   return (
     <div>
       <PageHeader title="سجل محاولات الدخول" back="/settings" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">آخر محاولات الدخول للوحة — ناجح وفاشل ومرفوض</Banner>
-        <RowLink href="/settings/access" icon="↗" title="أمان الوصول" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم التصدير");},600);}}>{busy?"جاري...":"تصدير السجل"}</Button>
-      </Card>
+      <Segment value={tab} onChange={setTab} options={[{ id: "all", label: "الكل" }, { id: "ok", label: "ناجح" }, { id: "bad", label: "فاشل" }]} />
+      <div className="mt-3 space-y-2">
+        {items.map((a: any) => (
+          <Card key={a.id}>
+            <div className="font-semibold">{a.success ? "✅ ناجح" : "❌ فاشل"} · {a.ip}</div>
+            <div className="text-sm text-ink-muted">{a.email} · {a.reason} · {a.userAgent} · {formatDateTime(a.createdAt)}</div>
+          </Card>
+        ))}
+        {items.length === 0 && <Empty title="لا محاولات في هذه الفترة" />}
+      </div>
     </div>
   );
 }

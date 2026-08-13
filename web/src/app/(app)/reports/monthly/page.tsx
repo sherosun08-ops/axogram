@@ -1,19 +1,18 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Card } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+import { PeriodStats } from "@/components/prod";
+export default function Page() {
+  const { data, loading } = useApi<any>("/api/reports");
+  if (loading) return <LoadingGrid />;
+  const by = (data?.jobs || []).reduce((m: any, j: any) => { m[j.type] = (m[j.type] || 0) + j.successCount; return m; }, {});
   return (
     <div>
       <PageHeader title="تقرير شهري" back="/reports" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">الشهر الحالي مع جدول رقمي بديل للرسم</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم التصدير");},600);}}>{busy?"جاري...":"تصدير"}</Button>
+      <PeriodStats jobs={data?.jobs || []} />
+      <Card>
+        <div className="font-bold mb-2">جدول رقمي حسب النوع</div>
+        {Object.entries(by).map(([k, v]) => <div key={k} className="flex justify-between text-sm py-1"><span>{k}</span><span>{String(v)}</span></div>)}
       </Card>
     </div>
   );

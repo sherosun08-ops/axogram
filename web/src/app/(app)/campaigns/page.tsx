@@ -1,16 +1,18 @@
 "use client";
 import { PageHeader, RowLink, Stat } from "@/components/ui";
 import { useApi, LoadingGrid } from "@/components/data";
-export default function CampHome() {
-  const { data, loading } = useApi<{campaigns:any[]}>("/api/campaigns");
+export default function Page() {
+  const { data, loading } = useApi<{ campaigns: any[] }>("/api/campaigns");
   if (loading) return <LoadingGrid />;
-  const items = (data?.campaigns||[]).filter((c:any)=>c.kind==="groups");
+  const items = (data?.campaigns || []).filter((c) => c.kind === "groups");
   return (
     <div>
       <PageHeader title="حملات القروبات" subtitle="إرسال إلى قروبات متعددة بجدول وحماية" />
       <div className="mb-4 grid grid-cols-2 gap-3">
         <Stat icon="📢" label="حملات" value={items.length} />
-        <Stat icon="⚡" label="نشطة" value={items.filter((c:any)=>c.status==="running").length} tone="info" />
+        <Stat icon="⚡" label="نشطة" value={items.filter((c) => c.status === "running").length} tone="info" />
+        <Stat icon="✅" label="أُرسل" value={items.reduce((s, c) => s + c.sentCount, 0)} tone="success" />
+        <Stat icon="📚" label="دليل القروبات" value="—" />
       </div>
       <div className="space-y-2">
         <RowLink href="/campaigns/new" icon="➕" title="إنشاء حملة" />

@@ -1,21 +1,28 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { useApi } from "@/components/data";
+import { api } from "@/lib/api-client";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data, reload } = useApi<{ proxies: any[] }>("/api/proxies");
+  const op = useOp();
+  const [keepAssigned, setKeep] = useState(true);
+  const dead = (data?.proxies || []).filter((p) => p.status === "dead" && (!keepAssigned || !p.accounts?.length));
   return (
     <div>
       <PageHeader title="إزالة غير النشطة" back="/proxy" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Field label="لم تُفحص منذ (يوم)" hint="30"><Input placeholder="لم تُفحص منذ (يوم)" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> لا تحذف المعيَّنة</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("لا نتائج أو جاهز للحذف");},600);}}>{busy?"جاري...":"فحص"}</Button>
+      <Feedback msg={op.msg} />
+      <Card className="mb-3">
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={keepAssigned} onChange={(e) => setKeep(e.target.checked)} /> لا تحذف المعيَّنة</label>
+        <div className="mt-2 font-bold">{dead.length} مرشّح للحذف</div>
       </Card>
+      <Button variant="danger" className="w-full" disabled={!dead.length} onClick={async () => {
+        await api("/api/proxies", { method: "DELETE", body: JSON.stringify({ ids: dead.map((p) => p.id) }) });
+        reload();
+        op.setMsg(`حُذف ${dead.length} بروكسي`);
+      }}>حذف غير النشطة</Button>
     </div>
   );
 }

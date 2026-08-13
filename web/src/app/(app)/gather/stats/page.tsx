@@ -1,21 +1,16 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+import { LogList, PeriodStats } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data, loading } = useApi<{ jobs: any[] }>("/api/jobs");
+  if (loading) return <LoadingGrid />;
   return (
     <div>
       <PageHeader title="إحصائيات التجميع" back="/gather" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">ملخص عمليات التجميع حسب المصدر والفترة</Banner>
-        <RowLink href="/reports/gather" icon="↗" title="سجل التجميع الكامل" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم تحديث الإحصائيات");},600);}}>{busy?"جاري...":"تحديث"}</Button>
-      </Card>
+      <PeriodStats jobs={data?.jobs || []} kind="gather" />
+      <LogList type="gather" />
     </div>
   );
 }

@@ -1,27 +1,30 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Banner } from "@/components/ui";
+import { SettingsForm } from "@/components/prod";
+
+export default function Limits() {
   return (
     <div>
-      <PageHeader title="الحدود الافتراضية" back="/settings" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Field label="حد الإضافة/حساب" hint="20"><Input placeholder="حد الإضافة/حساب" /></Field>
-        <Field label="حد التجميع/حساب" hint="500"><Input placeholder="حد التجميع/حساب" /></Field>
-        <Field label="حد الرسائل DM" hint="30"><Input placeholder="حد الرسائل DM" /></Field>
-        <Field label="حد حملات القروبات" hint="25"><Input placeholder="حد حملات القروبات" /></Field>
-        <Field label="التأخير من (ث)" hint="60"><Input placeholder="التأخير من (ث)" /></Field>
-        <Field label="التأخير إلى (ث)" hint="120"><Input placeholder="التأخير إلى (ث)" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> تفعيل الحدود الذكية</label>
-        <Banner tone="warning">أكثر من 50 إضافة/يوم عدواني جداً</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم حفظ الحدود الافتراضية");},600);}}>{busy?"جاري...":"حفظ الحدود"}</Button>
-      </Card>
+      <PageHeader title="الحدود الافتراضية اليومية" back="/settings" subtitle="تُورَّث لكل عملية جديدة — يمكن تخصيصها لكل حساب" />
+      <Banner tone="info">حساب أقل من 30 يوماً: 10/يوم · 1–6 أشهر: 20 · أكبر: 35 · Premium بهامش</Banner>
+      <SettingsForm
+        title="الحدود"
+        back="/settings"
+        success="تم حفظ الحدود الافتراضية"
+        keys={[
+          { key: "daily_add_limit", label: "حد الإضافة / حساب", type: "number", hint: "20–30 موصى بها — أكثر من 50 خطر PeerFlood" },
+          { key: "daily_gather_limit", label: "حد التجميع / حساب", type: "number", hint: "أكثر من 1000 يزيد FloodWait" },
+          { key: "daily_dm_limit", label: "حد الرسائل DM / حساب", type: "number" },
+          { key: "daily_campaign_limit", label: "حد حملات القروبات / حساب", type: "number" },
+          { key: "delay_min", label: "التأخير الأدنى (ثانية)", type: "number" },
+          { key: "delay_max", label: "التأخير الأقصى (ثانية)", type: "number" },
+          { key: "switch_after", label: "عمليات قبل التبديل", type: "number" },
+          { key: "rest_after", label: "راحة بعد كل N عملية", type: "number" },
+          { key: "rest_minutes", label: "مدة الراحة (دقيقة)", type: "number" },
+          { key: "smart_limits", label: "تفعيل الحدود الذكية", type: "toggle" },
+        ]}
+      />
     </div>
   );
 }

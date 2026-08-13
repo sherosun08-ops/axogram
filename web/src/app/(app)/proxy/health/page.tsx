@@ -1,19 +1,25 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { PageHeader, Card, Button, Radio } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("الكل");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const router = useRouter();
+  const op = useOp();
+  const [scope, setScope] = useState("all");
   return (
     <div>
       <PageHeader title="فحص صحة البروكسي" back="/proxy" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} />
       <Card className="space-y-3">
-        <div className="font-semibold">النطاق</div><Radio name="r" value="الكل" checked={val==="الكل"} onChange={setVal} label="الكل" /><Radio name="r" value="الميتة فقط" checked={val==="الميتة فقط"} onChange={setVal} label="الميتة فقط" /><Radio name="r" value="غير المفحوصة" checked={val==="غير المفحوصة"} onChange={setVal} label="غير المفحوصة" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("بدأ الفحص");},600);}}>{busy?"جاري...":"بدء الفحص"}</Button>
+        <Radio name="s" value="all" checked={scope === "all"} onChange={setScope} label="الكل" />
+        <Radio name="s" value="dead" checked={scope === "dead"} onChange={setScope} label="الميتة فقط" />
+        <Radio name="s" value="unknown" checked={scope === "unknown"} onChange={setScope} label="غير المفحوصة" />
+        <Button className="w-full" disabled={op.busy} onClick={async () => {
+          const r: any = await op.run("check_all_proxies", { scope });
+          router.push(`/reports/live/${r.job.id}`);
+        }}>بدء الفحص</Button>
       </Card>
     </div>
   );

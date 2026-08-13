@@ -1,20 +1,23 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button, Banner } from "@/components/ui";
+import { AccountSelect, Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [accountId, setAccountId] = useState("");
+  const [verdict, setVerdict] = useState("");
   return (
     <div>
-      <PageHeader title="فحص SpamBot" back="/security" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <PageHeader title="فحص SpamBot" back="/security" subtitle="يسأل عن حالة القيد لحساب محدد" />
+      <Feedback err={op.err} />
       <Card className="space-y-3">
-        <Banner tone="info">يسأل @SpamBot عن حالة القيد لحساب محدد</Banner>
-        <Field label="الحساب" hint=""><Input placeholder="الحساب" /></Field>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("لا قيود على هذا الحساب");},600);}}>{busy?"جاري...":"فحص"}</Button>
+        <AccountSelect value={accountId} onChange={setAccountId} label="الحساب" />
+        <Button className="w-full" disabled={!accountId || op.busy} onClick={async () => {
+          const r: any = await op.run("spambot", { accountId });
+          setVerdict(r.verdict);
+        }}>فحص</Button>
+        {verdict && <Banner tone={verdict.includes("لا قيود") ? "success" : "warning"}>{verdict}</Banner>}
       </Card>
     </div>
   );

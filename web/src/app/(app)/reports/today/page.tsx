@@ -1,21 +1,23 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+import { PeriodStats } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data, loading } = useApi<any>("/api/reports");
+  if (loading) return <LoadingGrid />;
+  const s = data?.summary || {};
   return (
     <div>
       <PageHeader title="تقرير اليوم" back="/reports" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">ملخص اليوم مقارنة بالأمس</Banner>
-        <RowLink href="/reports/analytics" icon="↗" title="مقارنة تفصيلية" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم التصدير");},600);}}>{busy?"جاري...":"تصدير اليوم"}</Button>
+      <PeriodStats jobs={data?.jobs || []} />
+      <Card className="mb-3 space-y-1 text-sm">
+        <div>عمليات اليوم: {s.todayJobs}</div>
+        <div>نجاح: {s.todaySuccess} · فشل: {s.todayFail}</div>
+        <div>تجميع تراكمي: {s.gather} · إضافة تراكمية: {s.add}</div>
       </Card>
+      <Link href="/reports/analytics" className="btn-ghost w-full">مقارنة تفصيلية</Link>
     </div>
   );
 }

@@ -1,20 +1,28 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Field, Textarea, Button, Select } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [raw, setRaw] = useState("");
+  const [type, setType] = useState("socks5");
+  const [test, setTest] = useState(true);
+  const [res, setRes] = useState<any>(null);
   return (
     <div>
       <PageHeader title="استيراد قائمة بروكسي" back="/proxy" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} msg={op.msg} />
       <Card className="space-y-3">
-        <Field label="القائمة — سطر لكل بروكسي host:port:user:pass"><Textarea placeholder="القائمة — سطر لكل بروكسي host:port:user:pass" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> اختبار قبل الحفظ</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم التحليل");},600);}}>{busy?"جاري...":"تحليل"}</Button>
+        <Field label="القائمة — سطر لكل بروكسي host:port:user:pass"><Textarea value={raw} onChange={(e) => setRaw(e.target.value)} /></Field>
+        <Field label="النوع"><Select value={type} onChange={(e) => setType(e.target.value)}><option value="socks5">SOCKS5</option><option value="http">HTTP</option></Select></Field>
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={test} onChange={(e) => setTest(e.target.checked)} /> اختبار قبل الحفظ</label>
+        <Button className="w-full" disabled={!raw || op.busy} onClick={async () => {
+          const r = await op.run("import_proxies", { raw, type, test });
+          setRes(r);
+          op.setMsg(`أُضيف ${r.added} بروكسي`);
+        }}>استيراد</Button>
+        {res && <div className="text-sm">أُضيف {res.added}</div>}
       </Card>
     </div>
   );

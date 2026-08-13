@@ -1,22 +1,31 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [tables, setTables] = useState<string[]>(["accounts", "proxies"]);
+  function tog(t: string) {
+    setTables((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
+  }
   return (
     <div>
-      <PageHeader title="تصدير بيانات CSV" back="/settings" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <PageHeader title="تصدير بيانات CSV" back="/settings" subtitle="تصدير البيانات فقط — بدون ملفات الجلسات" />
+      <Feedback err={op.err} msg={op.msg} />
       <Card className="space-y-3">
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> الحسابات</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> البروكسيهات</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> العمليات</label>
-        <div className="font-semibold">الفترة</div><Radio name="r" value="كل السجلات" checked={val==="كل السجلات"} onChange={setVal} label="كل السجلات" /><Radio name="r" value="آخر 30 يوم" checked={val==="آخر 30 يوم"} onChange={setVal} label="آخر 30 يوم" /><Radio name="r" value="آخر 90 يوم" checked={val==="آخر 90 يوم"} onChange={setVal} label="آخر 90 يوم" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("اكتمل التصدير");},600);}}>{busy?"جاري...":"تصدير"}</Button>
+        {[["accounts", "الحسابات"], ["proxies", "البروكسيهات"], ["jobs", "العمليات"]].map(([id, l]) => (
+          <label key={id} className="flex gap-2"><input type="checkbox" checked={tables.includes(id)} onChange={() => tog(id)} /> {l}</label>
+        ))}
+        <Button className="w-full" disabled={!tables.length || op.busy} onClick={async () => {
+          const r: any = await op.run("export_csv", { tables });
+          const blob = new Blob([JSON.stringify(r.rows, null, 2)], { type: "application/json" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = r.filename;
+          a.click();
+          op.setMsg("اكتمل التصدير — تم تنزيل الملف");
+        }}>تصدير</Button>
       </Card>
     </div>
   );

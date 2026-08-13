@@ -1,21 +1,23 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Field, Input, Button } from "@/components/ui";
+import { AccountSelect, Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [accountId, setAccountId] = useState("");
+  const [pw, setPw] = useState("");
   return (
     <div>
-      <PageHeader title="إدارة 2FA" back="/security" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <PageHeader title="إدارة التحقق بخطوتين" back="/security" />
+      <Feedback err={op.err} msg={op.msg} />
       <Card className="space-y-3">
-        <Field label="الحساب" hint=""><Input placeholder="الحساب" /></Field>
-        <Field label="كلمة المرور الحالية" hint=""><Input placeholder="كلمة المرور الحالية" /></Field>
-        <Field label="كلمة المرور الجديدة" hint=""><Input placeholder="كلمة المرور الجديدة" /></Field>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم تحديث 2FA");},600);}}>{busy?"جاري...":"تحديث"}</Button>
+        <AccountSelect value={accountId} onChange={setAccountId} />
+        <Field label="كلمة المرور الجديدة"><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+        <Button className="w-full" disabled={!accountId || pw.length < 8 || op.busy} onClick={async () => {
+          await op.run("set_2fa", { accountId, password: pw });
+          op.setMsg("تم تحديث 2FA");
+        }}>تحديث / تفعيل</Button>
       </Card>
     </div>
   );

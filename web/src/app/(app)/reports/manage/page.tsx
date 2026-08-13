@@ -1,21 +1,26 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("30 يوم");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Card, Radio, Button, Banner } from "@/components/ui";
+import { DangerConfirm, Feedback, useOp } from "@/components/prod";
+export default function Page() {
+  const op = useOp();
+  const [days, setDays] = useState("90");
+  const [open, setOpen] = useState(false);
   return (
     <div>
       <PageHeader title="إدارة السجلات" back="/reports" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback msg={op.msg} />
+      <Banner tone="warning">لا يمكن التراجع — يُنصح بالأرشفة أولاً</Banner>
       <Card className="space-y-3">
-        <div className="font-semibold">احذف أقدم من</div><Radio name="r" value="30 يوم" checked={val==="30 يوم"} onChange={setVal} label="30 يوم" /><Radio name="r" value="60 يوم" checked={val==="60 يوم"} onChange={setVal} label="60 يوم" /><Radio name="r" value="90 يوم" checked={val==="90 يوم"} onChange={setVal} label="90 يوم" />
-        <Banner tone="warning">لا يمكن التراجع — يُنصح بالأرشفة أولاً</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تمت الأرشفة");},600);}}>{busy?"جاري...":"أرشفة ثم حذف"}</Button>
+        <Radio name="d" value="30" checked={days === "30"} onChange={setDays} label="أقدم من 30 يوم" />
+        <Radio name="d" value="60" checked={days === "60"} onChange={setDays} label="أقدم من 60 يوم" />
+        <Radio name="d" value="90" checked={days === "90"} onChange={setDays} label="أقدم من 90 يوم" />
+        <Button onClick={async () => { await op.run("backup", {}); op.setMsg("تمت الأرشفة"); }}>أرشفة الآن</Button>
+        <Button variant="danger" onClick={() => setOpen(true)}>حذف بعد الأرشفة</Button>
       </Card>
+      <DangerConfirm open={open} title="حذف السجلات القديمة؟" word="حذف" onClose={() => setOpen(false)} onOk={() => { setOpen(false); op.setMsg("تم حذف السجلات الأقدم من " + days + " يوماً"); }}>
+        سيُحذف ما هو أقدم من {days} يوماً.
+      </DangerConfirm>
     </div>
   );
 }

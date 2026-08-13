@@ -1,21 +1,29 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Field, Input, Button, Empty } from "@/components/ui";
+import { Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [q, setQ] = useState("تسويق");
+  const [results, setResults] = useState<any[] | null>(null);
   return (
     <div>
-      <PageHeader title="اكتشاف قروبات" back="/gather" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Field label="كلمات البحث" hint="تسويق، عقارات، برمجة"><Input placeholder="كلمات البحث" /></Field>
-        <div className="font-semibold">النوع</div><Radio name="r" value="قروبات" checked={val==="قروبات"} onChange={setVal} label="قروبات" /><Radio name="r" value="قنوات" checked={val==="قنوات"} onChange={setVal} label="قنوات" /><Radio name="r" value="الكل" checked={val==="الكل"} onChange={setVal} label="الكل" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("عُثر على 24 نتيجة");},600);}}>{busy?"جاري...":"بحث"}</Button>
-      </Card>
+      <PageHeader title="بحث متقدم واكتشاف قروبات" back="/gather" />
+      <Feedback err={op.err} />
+      <div className="mb-3 flex gap-2">
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="كلمات البحث" />
+        <Button disabled={op.busy} onClick={async () => setResults((await op.run("discover_groups", { q }) as any).results)}>بحث</Button>
+      </div>
+      <div className="space-y-2">
+        {results?.map((g) => (
+          <Card key={g.title}>
+            <div className="font-bold">{g.title}</div>
+            <div className="text-sm text-ink-muted">{g.username || "خاص"} · {g.members.toLocaleString("ar-SA")} · {g.type}</div>
+          </Card>
+        ))}
+        {results && !results.length && <Empty title="لا نتائج" />}
+      </div>
     </div>
   );
 }

@@ -1,23 +1,19 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader } from "@/components/ui";
+import { SettingsForm } from "@/components/prod";
+export default function Page() {
   return (
     <div>
-      <PageHeader title="الجدولة التلقائية" back="/settings" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> تصفير العدادات يومياً</label>
-        <Field label="وقت التصفير" hint="00:00"><Input placeholder="وقت التصفير" /></Field>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> فحص صحة الحسابات يومياً</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> نسخ احتياطي تلقائي</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم حفظ الجدولة");},600);}}>{busy?"جاري...":"حفظ الجدولة"}</Button>
-      </Card>
+      <PageHeader title="الجدولة التلقائية العامة" back="/settings" />
+      <SettingsForm back="/settings" title="sch" success="تم حفظ الجدولة التلقائية" keys={[
+        { key: "sched_reset", label: "تصفير العدادات يومياً", type: "toggle" },
+        { key: "sched_reset_time", label: "وقت التصفير" },
+        { key: "sched_health", label: "فحص صحة الحسابات يومياً", type: "toggle" },
+        { key: "sched_health_time", label: "وقت الفحص" },
+        { key: "sched_backup", label: "نسخ احتياطي تلقائي", type: "toggle" },
+        { key: "sched_backup_time", label: "وقت النسخ" },
+        { key: "sched_cleanup", label: "تنظيف الملفات القديمة تلقائياً", type: "toggle" },
+      ]} />
     </div>
   );
 }

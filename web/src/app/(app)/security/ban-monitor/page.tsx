@@ -1,21 +1,22 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Banner } from "@/components/ui";
+import { useApi } from "@/components/data";
+import { SettingsForm } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const { data } = useApi<any>("/api/accounts");
+  const hot = (data?.accounts || []).filter((a: any) => ["banned", "frozen", "restricted_temp"].includes(a.status));
   return (
     <div>
       <PageHeader title="مراقب الحظر الحي" back="/security" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> تنبيه فوري عند الحظر</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> إيقاف العمليات المرتبطة</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("المراقب يعمل");},600);}}>{busy?"جاري...":"حفظ"}</Button>
-      </Card>
+      {hot.length > 0 && <Banner tone="danger">{hot.length} حساب في حالة حظر/تقييد/تجميد</Banner>}
+      <div className="mb-4 space-y-2">
+        {hot.map((a: any) => <Card key={a.id}>{a.firstName} {a.lastName} · {a.status}</Card>)}
+      </div>
+      <SettingsForm back="/security" title="bm" success="المراقب يعمل" keys={[
+        { key: "ban_alert", label: "تنبيه فوري عند الحظر", type: "toggle" },
+        { key: "ban_stop", label: "إيقاف العمليات المرتبطة", type: "toggle" },
+      ]} />
     </div>
   );
 }

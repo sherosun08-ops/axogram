@@ -1,20 +1,19 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
-
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+import { PageHeader, Stat } from "@/components/ui";
+import { useApi, LoadingGrid } from "@/components/data";
+export default function Page() {
+  const { data, loading } = useApi<{ campaigns: any[] }>("/api/campaigns");
+  if (loading) return <LoadingGrid />;
+  const items = (data?.campaigns || []).filter((c) => c.kind === "groups");
   return (
     <div>
       <PageHeader title="إحصائيات حملات القروبات" back="/campaigns" />
-      {msg && <Banner tone="success">{msg}</Banner>}
-      <Card className="space-y-3">
-        <Banner tone="info">الوصول، الحذف، الحظر بعد الإرسال</Banner>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم التحديث");},600);}}>{busy?"جاري...":"تحديث"}</Button>
-      </Card>
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="حملات" value={items.length} />
+        <Stat label="أُرسل" value={items.reduce((s, c) => s + c.sentCount, 0)} tone="success" />
+        <Stat label="فشل" value={items.reduce((s, c) => s + c.failCount, 0)} tone="danger" />
+        <Stat label="نشطة" value={items.filter((c) => c.status === "running").length} tone="info" />
+      </div>
     </div>
   );
 }

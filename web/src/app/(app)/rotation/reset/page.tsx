@@ -1,21 +1,27 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { PageHeader, Card, Button, Radio, Banner } from "@/components/ui";
+import { DangerConfirm, Feedback, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const op = useOp();
+  const [scope, setScope] = useState("all");
+  const [open, setOpen] = useState(false);
   return (
     <div>
       <PageHeader title="تصفير العدادات" back="/rotation" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} msg={op.msg} />
+      <Banner tone="warning">التصفير يؤثر على قرار التدوير فوراً — لا يُلغى</Banner>
       <Card className="space-y-3">
-        <Banner tone="warning">التصفير يؤثر على قرار التدوير فوراً — لا يُلغى</Banner>
-        <div className="font-semibold">النطاق</div><Radio name="r" value="كل الحسابات" checked={val==="كل الحسابات"} onChange={setVal} label="كل الحسابات" /><Radio name="r" value="مجموعة" checked={val==="مجموعة"} onChange={setVal} label="مجموعة" /><Radio name="r" value="حسابات محددة" checked={val==="حسابات محددة"} onChange={setVal} label="حسابات محددة" />
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم تصفير العدادات");},600);}}>{busy?"جاري...":"تصفير"}</Button>
+        <Radio name="s" value="all" checked={scope === "all"} onChange={setScope} label="كل الحسابات" />
+        <Radio name="s" value="group" checked={scope === "group"} onChange={setScope} label="مجموعة محددة (الأولى)" />
+        <Button variant="danger" className="w-full" onClick={() => setOpen(true)}>تصفير</Button>
       </Card>
+      <DangerConfirm open={open} title="تصفير العدادات؟" word="تصفير" onClose={() => setOpen(false)} onOk={async () => {
+        const r: any = await op.run("reset_counters", { scope });
+        setOpen(false);
+        op.setMsg(`تم تصفير عدادات ${r.count} حساب`);
+      }}>سيُعاد احتساب الدورة من الصفر.</DangerConfirm>
     </div>
   );
 }

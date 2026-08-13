@@ -1,21 +1,29 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
-import { PageHeader, Card, Button, Field, Input, Textarea, Banner, RowLink, Radio, Toggle, Segment, Stat, Progress, Empty } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { PageHeader, Card, Field, Input, Button, Radio, Banner } from "@/components/ui";
+import { Feedback, FileSelect, useOp } from "@/components/prod";
 
-export default function Screen() {
-  const [msg,setMsg]=useState("");
-  const [val,setVal]=useState("");
-  const [busy,setBusy]=useState(false);
+export default function Page() {
+  const router = useRouter();
+  const op = useOp();
+  const [target, setTarget] = useState("");
+  const [mode, setMode] = useState("current");
+  const [fileId, setFileId] = useState("");
   return (
     <div>
       <PageHeader title="إرسال رابط الدعوة" back="/adder" />
-      {msg && <Banner tone="success">{msg}</Banner>}
+      <Feedback err={op.err} />
       <Card className="space-y-3">
-        <Field label="القروب الهدف" hint=""><Input placeholder="القروب الهدف" /></Field>
-        <div className="font-semibold">طريقة الرابط</div><Radio name="r" value="جلب الرابط الحالي" checked={val==="جلب الرابط الحالي"} onChange={setVal} label="جلب الرابط الحالي" /><Radio name="r" value="إنشاء رابط جديد" checked={val==="إنشاء رابط جديد"} onChange={setVal} label="إنشاء رابط جديد" />
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> إرسال مباشر عبر رسالة خاصة</label>
-        <Button className="w-full" disabled={busy} onClick={()=>{setBusy(true); setTimeout(()=>{setBusy(false); setMsg("تم تجهيز الرابط");},600);}}>{busy?"جاري...":"متابعة"}</Button>
+        <Field label="القروب الهدف"><Input value={target} onChange={(e) => setTarget(e.target.value)} /></Field>
+        <Radio name="m" value="current" checked={mode === "current"} onChange={setMode} label="جلب الرابط الحالي" />
+        <Radio name="m" value="new" checked={mode === "new"} onChange={setMode} label="إنشاء رابط جديد" />
+        <FileSelect value={fileId} onChange={setFileId} />
+        <Banner tone="info">يُرسل الرابط عبر رسالة خاصة للمستهدفين</Banner>
+        <Button className="w-full" disabled={!target || op.busy} onClick={async () => {
+          const r: any = await op.run("start_add", { target, method: "invite", fileId, total: 120, title: "إرسال روابط دعوة" });
+          router.push(`/reports/live/${r.job.id}`);
+        }}>بدء الإرسال</Button>
       </Card>
     </div>
   );
